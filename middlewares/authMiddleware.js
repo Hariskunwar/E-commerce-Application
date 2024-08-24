@@ -33,3 +33,12 @@ exports.protect=asyncErrorHandler(async (req,res,next)=>{
     next();
 });
 
+//Middleware to restrict access based on user roles
+exports.restrict=(...roles)=>{
+    return (req,res,next)=>{
+        if(!roles.includes(req.user.role)){
+            return next(new CustomError("You are not allowed to access this route",403))
+        }
+        next();
+    }
+}

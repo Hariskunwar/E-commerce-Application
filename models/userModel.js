@@ -39,6 +39,11 @@ const userSchema=new mongoose.Schema({
         }
     },
     passwordChangedAt:Date,
+    role:{
+         type:String,
+         enum:['user','admin'],
+         default:'user'
+    },
 },{timestamps:true});
 
 userSchema.pre("save",async function(next){
