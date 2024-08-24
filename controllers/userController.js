@@ -39,4 +39,23 @@ exports.signup=asyncErrorHandler(async (req,res,next)=>{
         });
     });
 
+    //admin get all users
+    exports.getAllUser=asyncErrorHandler(async (req,res,next)=>{
+      const users=await User.find();
+      res.status(200).json({
+        data:users
+      });
+    });
+
+    //admin get single user 
+    exports.getSingleUser=asyncErrorHandler(async (req,res,next)=>{
+      const user=await User.findById(req.params.id);
+      if(!user){
+        return next(new CustomError("User not found",404));
+      }
+      res.status(200).json({
+        data:user
+      });
+    });
+
     
