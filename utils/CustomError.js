@@ -3,7 +3,8 @@ class CustomError extends Error{
         super(message);
         this.statusCode=statusCode;
         this.status=(statusCode>=400&& statusCode<500)?"fail":"error";
-        Error.captureStackTrace(this,this.constructor)
+        Error.captureStackTrace(this,this.constructor);
+        this.isOperational=true;
     }
 }
 
