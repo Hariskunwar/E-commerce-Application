@@ -58,4 +58,27 @@ exports.signup=asyncErrorHandler(async (req,res,next)=>{
       });
     });
 
+    //get logged in user
+    exports.getCurrentUser=asyncErrorHandler(async (req,res,next)=>{
+      const user=await User.findById(req.user._id);
+      res.status(200).json({
+        data:user
+      });
+    });
 
+    //user change password
+    exports.updatePassword=asyncErrorHandler(async (req,res,next)=>{
+      const {currentPassword,newPassword,confirmPassword}=req.body;
+      const user=await User.findById(req.user._id).select("+password");
+      if(!(await user.comparePassword(currentPassword,user.password))){
+          return next(new CustomError("Current password provided is wrong",401));
+      }
+      user.password=newPassword;
+      user.confirmPassword=confirmPassword;
+      user.passwordChangedAt=new Date();
+      await user.save();
+      res.status(200).json({
+          token:generateToken(user._id),
+          data:user
+      });
+  });
