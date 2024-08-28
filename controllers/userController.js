@@ -141,3 +141,26 @@ exports.signup=asyncErrorHandler(async (req,res,next)=>{
     });
 
   });
+
+  //update profile
+  const filterRequestObj=(reqObj,...allowedFields)=>{
+    const newObj={};
+    Object.keys(reqObj).forEach((prop)=>{
+      if(allowedFields.includes(prop)){
+        newObj[prop]=reqObj[prop];
+      }
+    });
+    return newObj;
+  }
+
+  exports.updateMe=asyncErrorHandler(async (req,res,next)=>{
+    const {password,confirmPassword}=req.body;
+    if(password||confirmPassword){
+        return next(new CustomError("You cannot change your password using this endpoint",400));
+    }
+    const filterObj=filterRequestObj(req.body,"email","name","phone","photo");
+    const updatedUser=await User.findByIdAndUpdate(req.user._id,filterObj,{new:true,runValidators:true});
+    res.status(200).json({
+        data:updatedUser
+        });
+      });
