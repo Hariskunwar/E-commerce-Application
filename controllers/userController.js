@@ -2,6 +2,8 @@ const User=require("../models/userModel");
 const jwt=require("jsonwebtoken");
 const asyncErrorHandler=require("../utils/asyncErrorHandler");
 const CustomError=require("../utils/CustomError")
+const sendEmail=require("../utils/email");
+const crypto=require("crypto");
 
 const generateToken=(id)=>{
     return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRE});
@@ -81,4 +83,61 @@ exports.signup=asyncErrorHandler(async (req,res,next)=>{
           token:generateToken(user._id),
           data:user
       });
+  });
+
+
+  //resetting password
+
+  exports.forgotPassword=asyncErrorHandler(async (req,res,next)=>{
+    const user=await User.findOne({email:req.body.email});
+    if(!user){
+      return next(new CustomError("User not found",404));
+    }
+    const resetToken=user.createPasswordResetToken();
+    await user.save({validateBeforeSave:false});
+
+   const resetUrl=`${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+   const message=`You recieved a password reset request. 
+   Please use below link to reset your password.
+   ${resetUrl} 
+   This link will be valid only for 10 minute.`
+
+   try{
+   await sendEmail({
+    email:user.email,
+    subject:"Password change request recieved",
+    message:message
+   });
+  }catch (error) {
+    user.passwordResetToken=undefined;
+    user.passwordResetTokenExpires=undefined;
+    await user.save({validateBeforeSave:false});
+    return next(new CustomError('There was an error sending password reset email, please try again later'),500);
+  }
+    res.status(200).json({
+      status:"success",
+     message:"Password reset link send to your email."
+  });
+
+  });
+
+  exports.resetPassword=asyncErrorHandler(async (req,res,next)=>{
+    const {password,confirmPassword}=req.body;
+    const token=crypto.createHash('sha256').update(req.params.resetToken).digest("hex");
+    const user=await User.findOne({passwordResetToken:token,passwordResetTokenExpires:{$gte:Date.now()}});
+    if(!user){
+        return next(new CustomError('Reset token is invalid or expired',400));
+    }
+    user.password=password;
+    user.confirmPassword=confirmPassword;
+    user.passwordResetToken=undefined;
+    user.passwordResetTokenExpires=undefined;
+    user.passwordChangedAt=new Date();
+    await user.save();
+    
+    res.status(200).json({
+        message:'Password reset successfully',
+        token:generateToken(user._id)
+    });
+
   });
