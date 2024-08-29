@@ -8,6 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 
 app.use("/api/v1/users",require("./routes/userRoute"));
+app.use("/api/v1/products",require("./routes/productRoute"));
 
 //default route handler
 app.all("*",(req,res,next)=>{
