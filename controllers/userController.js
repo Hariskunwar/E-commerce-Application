@@ -4,6 +4,8 @@ const asyncErrorHandler=require("../utils/asyncErrorHandler");
 const CustomError=require("../utils/CustomError")
 const sendEmail=require("../utils/email");
 const crypto=require("crypto");
+const dataUri=require("../utils/dataUri");
+const cloudinary=require("../utils/cloudinary");
 
 const generateToken=(id)=>{
     return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRE});
@@ -162,5 +164,26 @@ exports.signup=asyncErrorHandler(async (req,res,next)=>{
     const updatedUser=await User.findByIdAndUpdate(req.user._id,filterObj,{new:true,runValidators:true});
     res.status(200).json({
         data:updatedUser
+        });
+      });
+
+
+      //upload user profile
+      exports.uploadProfilePhoto=asyncErrorHandler(async (req,res,next)=>{
+        const user=await User.findById(req.user._id);
+        const profile=dataUri(req.file);
+        //delete previous profile
+        if(user.photo.public_id){
+          await cloudinary.uploader.destroy(user.photo.public_id);
+        }
+        const response=await cloudinary.uploader.upload(profile.content);
+        user.photo={
+          public_id:response.public_id,
+          url:response.secure_url
+        }
+        await user.save({validateBeforeSave:false});
+        res.status(200).json({
+          message:"profile updated successfully",
+          user
         });
       });

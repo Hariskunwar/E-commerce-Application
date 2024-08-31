@@ -20,8 +20,12 @@ const userSchema=new mongoose.Schema({
         unique:true,
     },
     photo:{
-        type:String,
-        default:"https://i.stack.imgur.com/l60Hf.png"
+        public_id:{
+           type: String
+        },
+        url:{
+            type:String
+        }
     },
     password:{
         type:String,
