@@ -6,7 +6,7 @@ const CustomError = require("../utils/CustomError");
 
 //create new product
 exports.createProduct=asyncErrorHandler(async (req,res,next)=>{
-      if(!req.files){
+      if(!req.files||req.files.length===0){
          return next(new CustomError("Please provide product images",400));
       }
       let imageArray=[];
@@ -39,3 +39,49 @@ exports.createProduct=asyncErrorHandler(async (req,res,next)=>{
      }
     }
     });
+
+    //get list of product
+    exports.getProducts=asyncErrorHandler(async (req,res,next)=>{
+      const products=await Product.find();
+      res.status(200).json({
+        data:products
+      });
+    })
+
+    //get specific product by id
+    exports.getProduct=asyncErrorHandler(async (req,res,next)=>{
+      const product=await Product.findById(req.params.id);
+      if(!product){
+        return next(new CustomError("Product not found",404));
+      }
+      res.status(200).json({
+        data:product
+      });
+    })
+
+    //update specific product
+    exports.updateProduct=asyncErrorHandler(async (req,res,next)=>{
+      const updatedProduct=await Product.findByIdAndUpdate(req.params.id,req.body,{new:true,runValidators:true});
+      if(!updatedProduct){
+        return next(new CustomError("Product not found",404));
+      }
+      res.status(200).json({
+        data:updatedProduct
+      });
+    })
+
+    //delete specific product
+    exports.deleteProduct=asyncErrorHandler(async (req,res,next)=>{
+      const product=await Product.findById(req.params.id);
+      if(!product){
+        return next(new CustomError("Product not found",404));
+      }
+      //delete product image from cloudinary
+      for(let image of product.image){
+        await cloudinary.uploader.destroy(image.public_id);
+      }
+      await Product.findByIdAndDelete(req.params.id);
+      res.status(204).json({
+        data:null
+      });
+    })
