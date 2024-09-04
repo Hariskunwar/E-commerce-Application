@@ -21,12 +21,13 @@ const productSchema=new mongoose.Schema({
         url:String
     }],
     category:{
-        type:String,
-        required:[true,"Please enter product category"],
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Category",
+        required:[true,"Please enter product category"]
     },
     brand:{
         type:String,
-        required:[true,"Please enter product category"],
+        required:[true,"Please enter product brand"],
     },
     quantity:{
         type:Number,
