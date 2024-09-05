@@ -6,6 +6,7 @@ const sendEmail=require("../utils/email");
 const crypto=require("crypto");
 const dataUri=require("../utils/dataUri");
 const cloudinary=require("../utils/cloudinary");
+const Product=require("../models/productModel");
 
 const generateToken=(id)=>{
     return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRE});
@@ -187,3 +188,39 @@ exports.signup=asyncErrorHandler(async (req,res,next)=>{
           user
         });
       });
+
+      //add or remove product form product from user wishlist
+      exports.addRemoveToWishlist=asyncErrorHandler(async (req,res,next)=>{
+        const productId=req.body.productId;
+        const product=await Product.findById(productId);
+        if(!product){
+          return next(new CustomError("Product not found",404));
+        }
+        let user=await User.findById(req.user._id)
+        //check if user already in user wishlist
+        const isAlreadyAdded=user.wishlist.find((id)=>{
+          return id.toString()===product._id.toString();
+        })
+        //if product already in wishlist then remove
+        if(isAlreadyAdded){
+          user=await User.findByIdAndUpdate(user._id,{$pull:{wishlist:product._id}},{new:true});
+          res.status(200).json({
+            message:"Product removed from user wishlist",
+            data:user      
+          });
+        }else{
+          user=await User.findByIdAndUpdate(user._id,{$push:{wishlist:product._id}},{new:true});
+          res.status(200).json({
+            message:"Product added to user wishlist",
+            data:user      
+          });
+        }
+      })
+
+      //get user wish list
+      exports.getWishlist=asyncErrorHandler(async (req,res,next)=>{
+        const user=await User.findById(req.user._id).populate("wishlist");
+        res.status(200).json({
+            data:user.wishlist
+        });
+    });
