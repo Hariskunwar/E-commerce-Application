@@ -128,3 +128,42 @@ exports.createProduct=asyncErrorHandler(async (req,res,next)=>{
         data:null
       });
     })
+
+
+    //product rating functionality
+    exports.ratings=asyncErrorHandler(async (req,res,next)=>{
+      const {productId,star}=req.body;
+      if(star<1||star>5){
+        return next(new CustomError("Star rating must be between 1 and 5",400));
+      }
+      let product=await Product.findById(productId);
+      if(!product){
+        return next(new CustomError("Product not found",404));
+      }
+      //check if user has already rated the product
+      const alreadyRated=product.ratings.find((rate)=>{
+       return rate.ratedBy.toString()===req.user._id.toString();
+      });
+      if(alreadyRated){
+        //update existing rating
+        alreadyRated.star=star;
+      }else{
+        //add new rating
+        product.ratings.push({
+          star:star,
+          ratedBy:req.user._id
+        })
+      }
+      //calculate average ratings
+      const totalRate=product.ratings.length;
+      const ratingSum=product.ratings.reduce((acc,currRate)=>{
+        return acc+currRate.star
+      },0);
+      product.averageRating=Math.round(ratingSum/totalRate);
+      await product.save();
+      res.status(200).json({
+        data:product
+      })
+    })
+
+    
