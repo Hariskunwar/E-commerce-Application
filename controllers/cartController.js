@@ -2,6 +2,7 @@ const Cart=require("../models/cartModel");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const Product=require("..//models/productModel");
 const CustomError = require("../utils/CustomError");
+const Coupon=require("../models/couponModel");
 
 const calculateCartTotal=(cart)=>{
     let totalPrice=0;
@@ -110,5 +111,27 @@ exports.clearCart=asyncErrorHandler(async (req,res,next)=>{
     await Cart.findOneAndDelete({user:req.user._id});
     res.status(204).json({
         data:null
+    });
+});
+
+//apply coupon on user cart
+exports.applyCoupon=asyncErrorHandler(async (req,res,next)=>{
+    //get coupon
+    const coupon=await Coupon.findOne({name:req.body.name,expire:{$gt:Date.now()}});
+    if(!coupon){
+        return next(new CustomError("Coupon is invalid or expired",404));
+    }
+    //get logged user cart
+    const cart=await Cart.findOne({user:req.user._id});
+    if(!cart){
+        return next(new CustomError("No product in the cart",404));
+    }
+    const totalPrice=cart.totalCartPrice;
+    //calculate price after discount
+    const totalPriceAfterDiscount=(totalPrice-(totalPrice*coupon.discount)/100).toFixed(2);
+    cart.totalAfterDiscount=totalPriceAfterDiscount;
+    await cart.save();
+    res.status(200).json({
+        data:cart
     });
 });

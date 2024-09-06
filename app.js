@@ -11,6 +11,7 @@ app.use("/api/v1/users",require("./routes/userRoute"));
 app.use("/api/v1/products",require("./routes/productRoute"));
 app.use("/api/v1/categories",require("./routes/categoryRoute"));
 app.use("/api/v1/carts",require("./routes/cartRoute"));
+app.use("/api/v1/coupons",require("./routes/couponRoute"));
 
 //default route handler
 app.all("*",(req,res,next)=>{

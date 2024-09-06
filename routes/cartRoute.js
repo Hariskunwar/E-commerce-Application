@@ -1,6 +1,6 @@
 const express=require("express");
 const { protect } = require("../middlewares/authMiddleware");
-const { addProductToCart, getCart, removeSpecificCartItem, updateCartItemQuantity, clearCart } = require("../controllers/cartController");
+const { addProductToCart, getCart, removeSpecificCartItem, updateCartItemQuantity, clearCart, applyCoupon } = require("../controllers/cartController");
 
 const router=express.Router();
 
@@ -10,6 +10,7 @@ router.post("/",addProductToCart);
 router.get("/",getCart);
 router.delete("/",clearCart);
 router.delete("/:id",removeSpecificCartItem);
+router.put("/apply-coupon",protect,applyCoupon);
 router.put('/:id',updateCartItemQuantity);
 
 
