@@ -12,6 +12,7 @@ app.use("/api/v1/products",require("./routes/productRoute"));
 app.use("/api/v1/categories",require("./routes/categoryRoute"));
 app.use("/api/v1/carts",require("./routes/cartRoute"));
 app.use("/api/v1/coupons",require("./routes/couponRoute"));
+app.use("/api/v1/orders",require("./routes/orderRoute"));
 
 //default route handler
 app.all("*",(req,res,next)=>{
